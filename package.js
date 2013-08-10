@@ -12,7 +12,7 @@ Package.on_use(function (api) {
   api.add_files('cordova.client.js', 'client');
   api.add_files('cordova.client.notify.js', 'client');
 
-  api.export('Cordova', 'client');
+  api.export && api.export('Cordova', 'client');
 });
 
 Package.on_test(function(api) {

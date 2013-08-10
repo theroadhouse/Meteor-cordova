@@ -7,7 +7,7 @@
   <name>MeteorCordova</name>
 
   <description>
-    This plugin allows Meteor to run remotely inside Cordova and accessing events and the native scope. It also includes some fallbacks so that the Meteor code can run the same with or without the notification plugins. This allows Meteor to run inside both browsers and cordova.
+    This plugin allows Meteor to run remotely inside Cordova and accessing events and the native scope.
   </description>
 
   <info>

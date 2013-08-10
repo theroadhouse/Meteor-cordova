@@ -1,134 +1,209 @@
 /*
+Code by RaiX 2013
 
-Meteor-Cordova, by RaiX
+*/
 
-Credit goes to @awatson1978 and @zeroasterisk
+Cordova = function(options) {
+  var self = this;
 
-MIT License
+  self.debug = (options && typeof options.debug !== 'undefined')?options.debug: false;
 
- */
+  self.plugins = {};
 
-/*
-	beep - does what is says
-	beep(duration, type, callback);
-	callback when beep is done
- */
-var beep = (function () {
-	try {
-		// Fix up for prefixing
-		window.AudioContext = window.AudioContext||window.webkitAudioContext;
-		context = new AudioContext();
-	} catch(e) {
-		return function(duration, type, callback) {
-			// Not supported by the browser
-		};
-	}
+  // Add plugins and set them deactivated until device is ready
+  if (options && typeof options.plugins !== 'undefined') {
+    for (var key in Object.keys(options.plugins)) {
+      if (options.plugins[key] == true) {
+        self.plugins[key] = false;
+      }
+    }
+  }
 
-    return function (duration, type, callback) {
-        var osc = context.createOscillator();
+  self.url = 'file://';
 
-		// 0 Sine wave
-		// 1 Square wave
-		// 2 Sawtooth wave
-		// 3 Triangle wave
-        osc.type = (type % 4) || 0;
+  // array of invokeId of callbacks 0 = the returning callback
+  self.invokes = {};
+  self.invokeCounter = 0;
 
-        osc.connect(context.destination);
-        osc.noteOn(0);
-        setTimeout(function() {
-            osc.noteOff(0);
-            // Callback when beep stops
-            if (typeof callback === 'function')
-				callback();
-        }, duration);
-    };
-})();
+  // array of eventId's containing an array of listeners
+  self.eventCallbacks = {};
 
-var _Cordova = function() {
-	var self = this;
-
-	// Rig reactive ready var
-	self._ready = false;
-
-	self._readyDeps = new Deps.Dependency();
-
-	self.isReady = function() {
-		self._readyDeps.depend();
-		return self._ready;
-	};
-
-	self.setReady = function(value) {
-		if (value !== self._ready) {
-			self._ready = value;
-			self._readyDeps.changed();
-		}
-	};
-
-	// Init deviceready event listener
-	document.addEventListener("deviceready",function() {
-		self.setReady(true);
-	},false);
+  // one time events
+  self.oneTimeEvents = {
+    'deviceready': true
+  };
 
 
-	//////////////// Unified common API //////////////////
+  // Rig reactive ready var
+  self._ready = false;
+  self._readyDeps = new Deps.Dependency();
 
-	self.alert = function(message, alertCallback, title, buttonName) {
-		console.log(typeof alertCallback);
-		if (typeof alertCallback !== 'function')
-			throw new Error('Function "alert" expects a callback function');
+  self.isReady = function() {
+    self._readyDeps.depend();
+    return self._ready;
+  };
 
-		if (navigator && navigator.notification && navigator.notification.alert)
-			navigator.notification.alert(message, alertCallback, title, buttonName);
-		else {
-			// title, buttonName ?
-			window.alert(message);
-			alertCallback();
-		}
-	};
+  self.setReady = function(value) {
+    if (value !== self._ready) {
+      self._ready = value;
+      self._readyDeps.changed();
+    }
+  };
 
-	self.confirm = function(message, confirmCallback, title, buttonLabels) {
-		if (typeof confirmCallback !== 'function')
-			throw new Error('Function "confirm" expects a callback function');
+  self.addEventListener = function(eventId, callback) {
+    if (typeof callback !== 'function') {
+      throw new Error('ERROR: Cordova.addEventListener expects callback as function');
+    }
+    if (typeof self.eventCallbacks[eventId] === 'undefined') {
 
-		if (navigator && navigator.notification && navigator.notification.confirm)
-			navigator.notification.confirm(message, confirmCallback, title, buttonLabels);
-		else
-			confirmCallback( window.confirm(message)?1:0 );
-	};
+      // Initialize
+      self.eventCallbacks[eventId] = [];
 
-	self.prompt = function(message, promptCallback, title, buttonLabels, defaultText) {
-		if (typeof promptCallback !== 'function')
-			throw new Error('Function "prompt" expects a callback function');
+      // Let the cordova know we are interested in this event
+      self.send({
+        eventId: eventId
+      });
+    }
+    // Return the callback id
+    return self.eventCallbacks[eventId].push(callback);
+  };
 
-		if (navigator && navigator.notification && navigator.notification.prompt)
-			navigator.notification.prompt(message, promptCallback, title, buttonLabels, defaultText);
-		else
-			promptCallback(window.prompt(message, defaultText));
+  self.addInvokingCallback = function(invokeId, callback) {
+    if (typeof self.invokes[invokeId] === 'undefined') {
+      self.invokes[invokeId] = [];
+    }
+    return self.invokes[invokeId].push(callback) - 1;
+  };
 
-	};
+  // command 'window.test' args [a, v], callback returns resulting value
+  self.call = function(command, args, callback) {
+    callback = (callback) ? callback : function() {};
 
-	self.beep = function(times) {
-		if (navigator && navigator.notification && navigator.notification.beep)
-			navigator.notification.beep(times);
-		else {
-			var beepTimes = function(countDown) {
-				beep(100, 3, function() {
-					if (countDown > 1)
-						beepTimes(countDown - 1);
-				});
-			};
-			beepTimes(times);
-		}
-	};
+    if (typeof callback !== 'function') {
+      throw new Error('MeteorCordova expects callback as a function');
+    }
 
-	self.vibrate = function(milliseconds) {
-		if (navigator && navigator.notification && navigator.notification.vibrate)
-			navigator.notification.vibrate(milliseconds);
-		else
-			beep(milliseconds, 0);
-	};
+    var invokeId = self.invokeCounter++;
+    var myArgs = [];
+    // We set the returning callback id == 0
+    var id = self.addInvokingCallback(invokeId, callback);
 
-	return self;
+    // We parse the arguments and filter out callback functions
+    for (var i = 0; i < args.length; i++) {
+      var arg = args[i];
+      // If the argument is a function
+      if (typeof arg === 'function') {
+        var funcId = self.addInvokingCallback(invokeId, arg);
+        myArgs.push({ funcId: funcId });
+      } else {
+        myArgs.push({ value: arg });
+      }
+    } // EO arg preparing
+    // Send message
+    self.send({
+      invokeId: invokeId,
+      command: command,
+      args: myArgs
+    });
+  };
+
+  self.send = function(message) {
+    if (window.parent) {
+     try {
+        JSON.stringify(message);
+      } catch(err) {
+        if (self.debug) {
+          console.log('ERROR: Send message');
+          console.log(message);
+        }
+        message = { error: 'could not run json on event object' };
+      }
+      window.parent.postMessage(message, self.url);
+    }
+  };
+
+  self.connection = function(msg) {
+    // We got an event to dispatch
+    if (typeof msg.eventId !== 'undefined') {
+      var listeners = self.eventCallbacks[msg.eventId];
+      if (typeof listeners !== 'undefined') {
+        // Trigger all listeners for this event
+        for (var i = 0; i < listeners.length; i++) {
+          try {
+            listeners[i].apply(window, [msg.payload]);
+          } catch(err) {
+          }
+        }
+        // If this is a one time event like deviceready remove all listeners
+        if (self.oneTimeEvents[msg.eventId]) {
+          delete self.eventCallbacks[msg.eventId];
+        }
+      }
+    } // EO msg event
+
+    // We got a callback function invoked
+    if (typeof msg.invokeId !== 'undefined' &&
+            typeof msg.funcId !== 'undefined' &&
+            typeof msg.args !== 'undefined') {
+
+      // Get the invoke object
+      var invoked = self.invokes[msg.invokeId];
+      if (typeof invoked === 'undefined') {
+        throw new Error('ERROR: invoked method id: ' + msg.invokeId + ' not found');
+      }
+
+      // Get the invoked function
+      var invokedFunction = invoked[msg.funcId];
+      if (typeof invoked === 'undefined') {
+        throw new Error('ERROR: invoked function id: ' + msg.funcId + ' not found');
+      }
+      // All set, we callback the function
+      invokedFunction.apply(window, msg.args);
+
+      // If the returning callback then delete this? - TODO: Should there be any
+      // Garbage collection?
+      if (msg.funcId === 0) {
+        if (Object.keys(invoked).length === 1) {
+          // The invoked method call only contains returning callback, we
+          // Remove the invoke itself since there will be no more calls
+          delete self.invokes[msg.invokeId];
+        } else {
+          // Even if we delete an item the index is preserved so the callback
+          // funcId still points to the right function
+          delete self.invokes[msg.invokeId][0];
+        }
+      }
+    } // EO method
+
+    if (msg.error) {
+      console.log('CLIENT GOT ERROR BACK: ' + msg.error);
+    }
+  }; // EO Connection
+
+  self.messageEventHandler = function(event) {
+    // If message is from meteor then
+    if (event.origin === self.url) {
+      // We have a connection
+      self.connection(event && event.data);
+    } else {
+      if (self.debug) {
+        console.log('Cordova messageEventHandler failed');
+      }
+    }
+  };
+
+  // Start listening for messages
+  window.addEventListener('message', self.messageEventHandler, false);
+
+  // Listen for deviceready event
+  self.addEventListener('deviceready', function() {
+    // Set the ready flag
+    self.setReady(true);
+    // Activate all native plugin API's
+    for (var key in Object.keys(self.plugins)) {
+      self.plugins[key] = true;
+    }
+  });
+
+  return self;
 };
-
-Cordova = new _Cordova();

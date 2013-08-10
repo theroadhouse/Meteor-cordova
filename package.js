@@ -1,21 +1,28 @@
 Package.describe({
-    summary: "\u001b[32mv0.0.1\n"+
+    summary: "\u001b[32mv0.0.2\n"+
   		   "\u001b[33m-----------------------------------------\n"+
-  		   "\u001b[0m Adds basic support for Cordova/Phonegap \n"+
-  		   "\u001b[0m Can use lazyload for loading Cordova.js\n"+
+  		   "\u001b[0m Adds basic support for Cordova/Phonegap  \n"+
+  		   "\u001b[0m shell communication in iframe            \n"+
   		   "\u001b[33m-------------------------------------RaiX\n"
 });
 
 Package.on_use(function (api) {
-    api.add_files('cordova.client.js', 'client');
-    api.add_files('cordova.server.js', 'server');
-    api.add_files('cordova.common.js', ['client', 'server']);
+  api.use('ejson', 'client');
+
+  api.add_files('cordova.client.js', 'client');
+  api.add_files('cordova.client.notify.js', 'client');
+
+  api.export('Cordova', 'client');
 });
 
-Package.on_test(function (api) {
-  api.use('tinytest');
-  api.use('deps');
-  api.add_files('rigtest.js', 'server');
-  api.add_files('cordova.client.js', 'server');
-  api.add_files('cordova.tests.js', 'server');
+Package.on_test(function(api) {
+  api.use('cordova', ['client']);
+  api.use('test-helpers', 'client');
+  api.use(['tinytest', 'underscore', 'ejson', 'ordered-dict',
+           'random', 'deps']);
+
+  api.add_files([
+    'www/meteor.cordova.js',
+    'meteor.cordova.tests.js',
+  ], 'client');
 });

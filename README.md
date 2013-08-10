@@ -179,7 +179,9 @@ Activate the native notification:
 ```js
 cordova = new Cordova({
   plugins: {
-    notification: true // If we have native installed plugin
+    notification: true, // If we have both native plugins installed
+    // vibration: true, // only the vibration plugin
+    // dialogs: true, // only the dialogs plugin
   }
 });
 ```

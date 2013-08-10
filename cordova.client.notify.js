@@ -48,21 +48,6 @@ var beep = (function () {
     };
 })();
 
-
-
-// Rig var for using the native stuff
-Cordova._useNotifications = false;
-
-// Init deviceready event listener
-Cordova.useNotifications = function() {
-	var self = this;
-	self.addEventListener("deviceready", function() {
-		// On ready start using notifications plugin - we dont do checks so the
-		// use better be sure that its installed
-		self._useNotifications = true;
-	},false);
-};
-
 //////////////// Unified common API //////////////////
 
 Cordova.alert = function(message, alertCallback, title, buttonName) {
@@ -71,7 +56,7 @@ Cordova.alert = function(message, alertCallback, title, buttonName) {
 	if (typeof alertCallback !== 'function')
 		throw new Error('Function "alert" expects a callback function');
 
-	if (self._useNotifications)
+	if (self.plugins.notification || self.plugins.dialogs)
 		self.call('navigator.notification.alert', [message, alertCallback, title, buttonName]);
 	else {
 		// title, buttonName ?
@@ -85,7 +70,7 @@ Cordova.confirm = function(message, confirmCallback, title, buttonLabels) {
 	if (typeof confirmCallback !== 'function')
 		throw new Error('Function "confirm" expects a callback function');
 
-	if (self._useNotifications)
+	if (self.plugins.notification || self.plugins.dialogs)
 		self.call('navigator.notification.confirm', [message, confirmCallback, title, buttonLabels]);
 	else
 		confirmCallback( window.confirm(message)?1:0 );
@@ -96,7 +81,7 @@ Cordova.prompt = function(message, promptCallback, title, buttonLabels, defaultT
 	if (typeof promptCallback !== 'function')
 		throw new Error('Function "prompt" expects a callback function');
 
-	if (self._useNotifications)
+	if (self.plugins.notification || self.plugins.dialogs)
 		self.call('navigator.notification.prompt', [message, promptCallback, title, buttonLabels, defaultText]);
 	else
 		promptCallback(window.prompt(message, defaultText));
@@ -105,7 +90,7 @@ Cordova.prompt = function(message, promptCallback, title, buttonLabels, defaultT
 
 Cordova.beep = function(times) {
 	var self = this;
-	if (self._useNotifications)
+	if (self.plugins.notification || self.plugins.vibration)
 		self.call('navigator.notification.beep', [times]);
 	else {
 		var beepTimes = function(countDown) {
@@ -120,7 +105,7 @@ Cordova.beep = function(times) {
 
 Cordova.vibrate = function(milliseconds) {
 	var self = this;
-	if (self._useNotifications)
+	if (self.plugins.notification || self.plugins.vibration)
 		self.call('navigator.notification.vibrate', [milliseconds]);
 	else
 		beep(milliseconds, 0);

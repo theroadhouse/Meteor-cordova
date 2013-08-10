@@ -33,6 +33,9 @@ window.parent = {
       origin: 'file://',
       data: message
     }]);
+  },
+  location: {
+    origin: 'file://'
   }
 };
 

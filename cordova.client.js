@@ -118,7 +118,9 @@ Cordova = function(options) {
         }
         message = { error: 'could not run json on event object' };
       }
-      window.parent.postMessage(message, self.url);
+      if (window.parent.location.origin === self.url) {
+        window.parent.postMessage(message, self.url);
+      }
     }
   };
 

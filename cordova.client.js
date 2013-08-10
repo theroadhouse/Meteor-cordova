@@ -175,7 +175,7 @@ Cordova = function(options) {
       }
     } // EO method
 
-    if (msg.error) {
+    if (msg.error && self.debug) {
       console.log('CLIENT GOT ERROR BACK: ' + msg.error);
     }
   }; // EO Connection

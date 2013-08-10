@@ -325,3 +325,8 @@ MeteorCordova = function(meteorUrl, options) {
 
   return self;
 };
+
+// Export for Cordova plugin
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = MeteorCordova;
+}

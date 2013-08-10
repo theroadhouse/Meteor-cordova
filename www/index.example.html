@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+
+  <title>Example</title>
+
+  <script charset="utf-8" type="text/javascript" src="cordova.js"></script>
+
+  <script charset="utf-8" type="text/javascript" src="js/meteor-cordova.js"></script>
+
+  <script type="text/javascript">
+    // Setting a variable containing the current shellVersion
+    shellVersion = '0.0.1';
+
+    meteor = new MeteorCordova('http://localhost:3000', {
+      
+      appcache: false, // Set this true if Meteor got appcache
+
+      fallbackUrl: '/fallbackurl.html'
+      
+      debug: true       // Set to false in production
+
+    });
+
+    function load() {
+      meteor.load(function(error) {
+        if (error) {
+          alert('error: ' + error);
+        }
+      });
+    }
+
+  </script>
+
+  <style type='text/css'>
+
+    /* Main layout */
+    * {
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+    }
+
+    html {
+      -ms-touch-action: none;
+      height: 100%;
+      background-color: black;
+    }
+
+    html, body, iframe {
+      overflow: hidden;
+    }
+
+    body {
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      background-color: black;
+    }
+
+    iframe {
+      background-color: black;
+      border: none;
+      height: 100%;
+      width: 100%;
+    }
+    /* EO Main layout */
+
+  </style>
+
+</head>
+<body onload="load();">
+</body>
+</html>

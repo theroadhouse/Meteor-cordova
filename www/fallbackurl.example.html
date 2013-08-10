@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+
+  <title>Example</title>
+
+  <script charset="utf-8" type="text/javascript" src="cordova.js"></script>
+
+  <script charset="utf-8" type="text/javascript" src="js/meteor-cordova.js"></script>
+
+  <script type="text/javascript">
+
+    function tryAgain() {
+      window.location.replace("/index.html");
+    }
+
+  </script>
+
+  <style type='text/css'>
+
+    /* Main layout */
+    * {
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+    }
+
+    html {
+      -ms-touch-action: none;
+      height: 100%;
+      background-color: black;
+    }
+
+    html, body, iframe {
+      overflow: hidden;
+    }
+
+    body {
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      background-color: black;
+    }
+
+    iframe {
+      background-color: black;
+      border: none;
+      height: 100%;
+      width: 100%;
+    }
+    /* EO Main layout */
+
+  </style>
+
+</head>
+<body>
+  <h1>Could not load the app</h1>
+  <small>Requires internet connection</small><br/>
+  <br/>
+  <br/>
+  <button onclick="tryAgain();">Try again</button>
+</body>
+</html>

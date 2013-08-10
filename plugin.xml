@@ -26,8 +26,9 @@
       <merges target="MeteorCordova" />
   </js-module>
 
-  <!-- <asset src="www/meteor.cordova.js" target="meteor.cordova.js" /> -->
-
+  <asset src="www/fallbackurl.example.html" target="fallbackurl.example.html" />
+  <asset src="www/index.example.html" target="index.example.html" />
+  
   <engines>
     <engine name="cordova" version=">=3.0.0" />
   </engines>  

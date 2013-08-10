@@ -9,78 +9,34 @@ This package consists of multiple features:
 * Allowing Meteor to interact with Cordova and plugins
 
 #Getting started
-First you need to add the `www/meteor.cordova.js` to your cordova app's `www/js` folder.
+1. Use the cordova CLI to install the plugin in the project
+```bash
+$ cordova plugin add https://github.com/raix/Meteor-Cordova.git
+```
+2. Use meteorite to add the package to the meteor app
+```bash
+mrt add cordova
+```
 
-Add some boilerplate to `index.html` inspiration:
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+Add some boilerplate checkout `www/index.example.html` inspiration. When the device is ready MeteorCordova can be used, the plugin is loaded by Cordova so no need for script tags.
+```
+    document.addEventListener('deviceready', function() {
 
-  <title>Hello world</title>
-  <script charset="utf-8" type="text/javascript" src="cordova.js"></script>
+      meteor = new MeteorCordova('http://localhost:3000', {
+        appcache: false, // Set this true if Meteor got appcache
+        fallbackUrl: 'fallbackurl.example.html',
+        debug: true       // Set to false in production
 
-  <script charset="utf-8" type="text/javascript" src="js/meteor.cordova.js"></script>
+      });
 
-  <script type="text/javascript">
-
-    meteor = new MeteorCordova('http://www.foo.com', {
-      // Set appcache = true if appcached is used
-      appcache: false,
-      fallbackUrl: 'failed.html'
-    });
-
-    // Call this function on body load
-    function load() {
+      // Begin the load process
       meteor.load(function(error) {
         if (error) {
           alert('error: ' + error);
         }
       });
-    }
-  </script>
-
-  <style type='text/css'>
-
-    /* Main layout */
-    * {
-      -webkit-box-sizing: border-box;
-      -moz-box-sizing: border-box;
-      box-sizing: border-box;
-    }
-
-    html {
-      -ms-touch-action: none;
-      height: 100%;
-      background-color: black;
-    }
-
-    html, body, iframe {
-      overflow: hidden;
-    }
-
-    body {
-      height: 100%;
-      padding: 0;
-      margin: 0;
-      border: 0;
-      background-color: black;
-    }
-
-    iframe {
-      background-color: black;
-      border: none;
-      height: 100%;
-      width: 100%;
-    }
-    /* EO Main layout */
-  </style>
-
-</head>
-<body onload="load();">
-</body>
-</html>
+      
+    });
 ```
 
 ##Options

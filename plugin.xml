@@ -41,8 +41,7 @@
   <!-- ios -->
   <platform name="ios">
     <!-- Make sure we are fullscreen - the statusbar got to go... -->
-    <config-file target="*-Info.plist" parent="/">
-      <key>UIStatusBarHidden</key>
+    <config-file target="*-Info.plist" parent="UIStatusBarHidden">
       <true/>
     </config-file>
 

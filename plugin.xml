@@ -41,11 +41,9 @@
   <!-- ios -->
   <platform name="ios">
     <!-- Make sure we are fullscreen - the statusbar got to go... -->
-    <config-file target="*-Info.plist" parent="CFBundleURLTypes">
-      <dict>
-        <key>UIStatusBarHidden</key>
-        <true/>
-      </dict>
+    <config-file target="*-Info.plist" parent="/">
+      <key>UIStatusBarHidden</key>
+      <true/>
     </config-file>
 
   </platform>

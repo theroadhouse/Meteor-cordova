@@ -28,6 +28,67 @@ arguments:
 
 */
 
+
+if(!Array.isArray) {
+  Array.isArray = function (vArg) {
+    return Object.prototype.toString.call(vArg) === "[object Array]";
+  };
+}
+
+/* Adapted from Meteor EJSON */
+_newBinary = function (len) {
+  if (typeof Uint8Array === 'undefined' || typeof ArrayBuffer === 'undefined') {
+    var ret = [];
+    for (var i = 0; i < len; i++) {
+      ret.push(0);
+    }
+    ret.$Uint8ArrayPolyfill = true;
+    return ret;
+  }
+  return new Uint8Array(new ArrayBuffer(len));
+};
+
+_isBinary = function (obj) {
+  return !!((typeof Uint8Array !== 'undefined' && obj instanceof Uint8Array) ||
+    (obj && obj.$Uint8ArrayPolyfill));
+};
+
+_clone = function (v) {
+  var ret;
+  if (typeof v !== "object")
+    return v;
+  if (v === null)
+    return null; // null has typeof "object"
+  if (v instanceof Date)
+    return new Date(v.getTime());
+  if (_isBinary(v)) {
+    ret = _newBinary(v.length);
+    for (var i = 0; i < v.length; i++) {
+      ret[i] = v[i];
+    }
+    return ret;
+  }
+  if (Array.isArray(v)) {
+    ret = [];
+    for (i = 0; i < v.length; i++)
+      ret[i] = _clone(v[i]);
+    return ret;
+  }
+  // handle general user-defined typed Objects if they have a clone method
+  if (typeof v.clone === 'function') {
+    return v.clone();
+  }
+  // handle other objects
+  ret = {};
+  for (var key in v) {
+    if (v.hasOwnProperty(key)) {
+      ret[key] = _clone(v[key]);
+    }
+  }
+
+  return ret;
+};
+
 MeteorCordova = function(meteorUrl, options) {
   // Rig vars
   var self = this;
@@ -224,7 +285,7 @@ MeteorCordova = function(meteorUrl, options) {
     target.addEventListener(eventId, function(event) {
       // Got an event, let et be triggered
       // make a json proper object out off the event...
-      var clonedEvent = EJSON.clone(event);
+      var clonedEvent = _clone(event);
       self.triggerEvent(eventId, clonedEvent);
     }, false);
   };

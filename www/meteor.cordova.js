@@ -97,6 +97,8 @@ MeteorCordova = function(meteorUrl, options) {
 
   self.activeEventListener = {};
 
+  self.handshakeActivated = false;
+
   self.testFrame = (options && options.testFrame)?options.testFrame:false;
 
   // Rig Options
@@ -202,6 +204,9 @@ MeteorCordova = function(meteorUrl, options) {
     if (self.appcache) {
       localStorage.setItem('cachedVersion', true);
     }
+
+    self.sendHandshake();
+
     self.runCallback(self.onload, 'ERROR: onload callback failed', [e, false]);
   };
 
@@ -220,7 +225,7 @@ MeteorCordova = function(meteorUrl, options) {
 
 
   self.send = function(message) {
-    if (self.iframe && self.iframe.contentWindow) {
+    if (self.iframe && self.iframe.contentWindow && self.handshakeActivated) {
       try {
         JSON.stringify(message);
       } catch(err) {
@@ -232,6 +237,12 @@ MeteorCordova = function(meteorUrl, options) {
       }
       self.iframe.contentWindow.postMessage(message, self.url);
     }
+  };
+
+  self.sendHandshake = function() {
+    console.log('------------ SEND HANDSHAKE!!! ------------');
+    // Send a handshake to the client to make sure we are all on the same page
+    self.iframe.contentWindow.postMessage({ handshake: 'Meteor Rocks!'}, self.url);
   };
 
   self.triggerEvent = function(eventId, payload) {
@@ -297,8 +308,13 @@ MeteorCordova = function(meteorUrl, options) {
     // We rig a connection for the iframe.
     if (msg) {
       //  EVENT - If meteor wants to listen for events
-      if (msg.eventId) {
+      if (typeof msg.eventId !== 'undefined') {
         self.addEventListener(msg.eventId);
+      }
+
+      if (typeof msg.handshake !== 'undefined' && msg.handshake === 'Meteor Rocks!') {
+        console.log('------------ GOT HANDSHAKE!!! ------------');
+        self.handshakeActivated = true;
       }
 
       // CALL - if an function call then execute

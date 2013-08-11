@@ -21,6 +21,8 @@ Cordova = function(options) {
 
   self.url = 'file://';
 
+  self.handshakeActivated = false;
+
   // array of invokeId of callbacks 0 = the returning callback
   self.invokes = {};
   self.invokeCounter = 0;
@@ -118,12 +120,23 @@ Cordova = function(options) {
         }
         message = { error: 'could not run json on event object' };
       }
-      
-      window.parent.postMessage(message, self.url);
+
+      // Check if we are in iframe
+      if (window.self !== window.top && self.handshakeActivated) {
+        window.parent.postMessage(message, self.url);
+      }
     }
   };
 
   self.connection = function(msg) {
+    if (typeof msg.handshake !== 'undefined') {
+      // We got a handshake from the cordova
+      self.handshakeActivated = true;
+      window.parent.postMessage({
+        handshake: msg.handshake
+      }, self.url);      
+    }
+
     // We got an event to dispatch
     if (typeof msg.eventId !== 'undefined') {
       var listeners = self.eventCallbacks[msg.eventId];

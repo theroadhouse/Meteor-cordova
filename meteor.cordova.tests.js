@@ -109,7 +109,7 @@ Tinytest.addAsync('MeteorCordova - load test, ', function (test, onComplete) {
 
       onComplete();
     });
-    
+
   }
 
   load();
@@ -128,7 +128,7 @@ Tinytest.add('MeteorCordova - Events', function(test) {
 
   var counter = 0;
   var counterDeviceReady = 0;
-  
+
   test.isUndefined(client.eventCallbacks['test'], 'Before we start the event callbacks list should be empty');
   test.isUndefined(client.oneTimeEvents['test']);
 
@@ -137,7 +137,7 @@ Tinytest.add('MeteorCordova - Events', function(test) {
     counter++;
     test.isTrue( equals(event, eventData) );
   });
- 
+
   test.isTrue(typeof client.eventCallbacks['test'][0] === 'function', 'We would expect the handler as 0');
 
 
@@ -170,6 +170,18 @@ Tinytest.addAsync('MeteorCordova - call - variable', function (test, onComplete)
     test.equal(value, 'ok');
     onComplete();
   });
+});
+
+Tinytest.add('MeteorCordova - call - function not found', function(test) {
+  // Test variables
+  var errors = 0;
+  try {
+    client.call('im.not.found.foo');
+  } catch(err) {
+    errors++;
+  }
+
+  test.equal(errors, 1, 'Call should throw an error the function does not exist');
 });
 
 Tinytest.addAsync('MeteorCordova - call - variable no args', function (test, onComplete) {
@@ -255,7 +267,7 @@ Tinytest.addAsync('MeteorCordova - call - method with callback param no returnin
 Tinytest.add('MeteorCordova - clone', function(test) {
   var date = new Date();
   var c = { d: 'test', q: { test: 'test' } };
-  
+
   c.circular = c;
 
   var a = {

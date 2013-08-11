@@ -382,20 +382,23 @@ MeteorCordova = function(meteorUrl, options) {
           console.log('------------ CALL METHOD ' + msg.invokeId + ' ------------');
         }
         // Guess we got something like window.console.log
-        var list = msg.command.split('.');
-        if (list && list.length > 0) {
+        var keys = msg.command.split('.');
+        if (keys && keys.length > 0) {
           // Set reference to root element, window contains window - global
           var reference = window;
 
           // We save the last element for execution or fetch
-          var last = list[ list.length - 1 ];
-          // Iterate over command elements first ref: window[ list[i] ]
+          var last = keys[ keys.length - 1 ];
+          // Iterate over command elements first ref: window[ keys[i] ]
           // We stop a level before hitting the last item: [0 .. n[
-          for (var a = 0; a < list.length - 2; a++) {
+          for (var a = 0; a < keys.length - 2; a++) {
             // Check that the reference scope isnt undefined
             if (typeof reference !== 'undefined') {
               // set new reference a level deeper
-              reference = reference[ list[ a ] ];
+              reference = reference[ keys[ a ] ];
+            } else {
+              // If reference is undefined then somethings wrong
+              throw new Error('Can not call ' + msg.command);
             }
           }
 

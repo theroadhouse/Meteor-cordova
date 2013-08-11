@@ -379,7 +379,7 @@ MeteorCordova = function(meteorUrl, options) {
               typeof msg.args !== 'undefined') {
 
         if (self.debug) {
-          console.log('------------ CALL METHOD ' + msg.invokeId + ' ------------');
+          console.log('------------ CALL METHOD ' + msg.command + ' ------------');
         }
         // Guess we got something like window.console.log
         var keys = msg.command.split('.');

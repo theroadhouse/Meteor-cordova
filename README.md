@@ -48,7 +48,20 @@ Add some boilerplate checkout `www/index.example.html` inspiration. When the dev
   }
 ```
 
-#The API
+#The Meteor client API
+##Init
+```js
+  cordova = new Cordova();
+```
+adding options:
+```js
+  cordova = new Cordova({
+    plugins: {
+      notification: true // More docs below in the native section
+    }
+  });
+```
+
 ##Call device scope javascript
 To call functions or read variables on the device we have a simple function `call`
 Call takes three parametres:

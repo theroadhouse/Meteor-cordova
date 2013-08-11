@@ -8,15 +8,20 @@ Cordova = function(options) {
 
   self.debug = (options && typeof options.debug !== 'undefined')?options.debug: false;
 
-  self.plugins = {};
+  self.plugins = {
+    loaded: true
+  };
 
   // Add plugins and set them deactivated until device is ready
-  if (options && typeof options.plugins !== 'undefined') {
-    for (var key in Object.keys(options.plugins)) {
+  if (typeof options !== 'undefined' &&
+          typeof options.plugins !== 'undefined') {
+
+    for (var key in options.plugins) {
       if (options.plugins[key] === true) {
         self.plugins[key] = false;
       }
     }
+
   }
 
   self.url = 'file://';
@@ -265,7 +270,7 @@ Cordova = function(options) {
     // Set the ready flag
     self.setReady(true);
     // Activate all native plugin API's
-    for (var key in Object.keys(self.plugins)) {
+    for (var key in self.plugins) {
       if (self.plugins.hasOwnProperty(key)) {
         self.plugins[key] = true;
       }

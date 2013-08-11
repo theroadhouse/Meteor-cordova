@@ -16,6 +16,9 @@ This file extends the cordova with notification plugin api
 	callback when beep is done
  */
 
+if (typeof Cordova === 'undefined') {
+  alert('wrong load order?');
+}
 
 var beep = (function () {
 	try {
@@ -50,49 +53,52 @@ var beep = (function () {
 
 //////////////// Unified common API //////////////////
 
-Cordova.alert = function(message, alertCallback, title, buttonName) {
+Cordova.prototype.alert = function(message, alertCallback, title, buttonName) {
 	var self = this;
 	console.log(typeof alertCallback);
 	if (typeof alertCallback !== 'function')
 		throw new Error('Function "alert" expects a callback function');
 
-	if (self.plugins.notification || self.plugins.dialogs)
+	if (self.plugins.notification || self.plugins.dialogs) {
 		self.call('navigator.notification.alert', [message, alertCallback, title, buttonName]);
-	else {
+  } else {
 		// title, buttonName ?
 		window.alert(message);
 		alertCallback();
 	}
 };
 
-Cordova.confirm = function(message, confirmCallback, title, buttonLabels) {
+Cordova.prototype.confirm = function(message, confirmCallback, title, buttonLabels) {
 	var self = this;
 	if (typeof confirmCallback !== 'function')
 		throw new Error('Function "confirm" expects a callback function');
 
-	if (self.plugins.notification || self.plugins.dialogs)
+	if (self.plugins.notification || self.plugins.dialogs) {
 		self.call('navigator.notification.confirm', [message, confirmCallback, title, buttonLabels]);
-	else
+  } else {
 		confirmCallback( window.confirm(message)?1:0 );
+  }
 };
 
-Cordova.prompt = function(message, promptCallback, title, buttonLabels, defaultText) {
+Cordova.prototype.prompt = function(message, promptCallback, title, buttonLabels, defaultText) {
 	var self = this;
-	if (typeof promptCallback !== 'function')
-		throw new Error('Function "prompt" expects a callback function');
+  if (typeof promptCallback !== 'function')
+    throw new Error('Function "prompt" expects a callback function');
 
-	if (self.plugins.notification || self.plugins.dialogs)
+  if (self.plugins.notification || self.plugins.dialogs) {
 		self.call('navigator.notification.prompt', [message, promptCallback, title, buttonLabels, defaultText]);
-	else
+  } else {
 		promptCallback(window.prompt(message, defaultText));
+  }
 
 };
 
-Cordova.beep = function(times) {
+Cordova.prototype.beep = function(times) {
 	var self = this;
-	if (self.plugins.notification || self.plugins.vibration)
+  times = times || 1;
+	if (self.plugins.notification || self.plugins.vibration) {
 		self.call('navigator.notification.beep', [times]);
-	else {
+  } else {
 		var beepTimes = function(countDown) {
 			beep(100, 3, function() {
 				if (countDown > 1)
@@ -103,10 +109,11 @@ Cordova.beep = function(times) {
 	}
 };
 
-Cordova.vibrate = function(milliseconds) {
+Cordova.prototype.vibrate = function(milliseconds) {
 	var self = this;
-	if (self.plugins.notification || self.plugins.vibration)
+	if (self.plugins.notification || self.plugins.vibration) {
 		self.call('navigator.notification.vibrate', [milliseconds]);
-	else
+  } else {
 		beep(milliseconds, 0);
+  }
 };

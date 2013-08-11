@@ -61,10 +61,12 @@ EJSON.isGlobal = function (vArg) {
 EJSON.emptyFunction = function() {};
 
 EJSON.clone = function (v /* list of parents */) {
+  // How deep should we go
+  var maxLevel = 4;
 
   // Check for circular references
   if (typeof arguments !== 'undefined') {
-    if (arguments.length > 2) {
+    if (arguments.length > maxLevel) {
       return EJSON.emptyFunction;
     }
     for (var i = 1; i < arguments.length; i++) {
@@ -391,7 +393,7 @@ MeteorCordova = function(meteorUrl, options) {
           var last = keys[ keys.length - 1 ];
           // Iterate over command elements first ref: window[ keys[i] ]
           // We stop a level before hitting the last item: [0 .. n[
-          for (var a = 0; a < keys.length - 2; a++) {
+          for (var a = 0; a < keys.length - 1; a++) {
             // Check that the reference scope isnt undefined
             if (typeof reference !== 'undefined') {
               // set new reference a level deeper

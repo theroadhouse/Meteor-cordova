@@ -87,13 +87,13 @@ var cordova = new MeteorCordova('http://localhost:3000', {
   version: '0.0.1',
   // Do we rely on appcache?
   appcache: false,
-  debug: true,
+  debug: false,
   testFrame: testFrame
 });
 
 // Initialise the client last
 var client = new Cordova({
-  debug: true
+  debug: false
 });
 
 Tinytest.add('MeteorCordova - test suite', function(test) {
@@ -170,6 +170,8 @@ Tinytest.addAsync('MeteorCordova - call - variable', function (test, onComplete)
     test.equal(value, 'ok');
     onComplete();
   });
+  window.console.log('Got any messages?');
+  client.call('console.log', ['------TEST CALL CONSOLE LOG ----------']);
 });
 
 Tinytest.add('MeteorCordova - call - function not found', function(test) {

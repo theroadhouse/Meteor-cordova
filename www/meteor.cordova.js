@@ -309,11 +309,17 @@ MeteorCordova = function(meteorUrl, options) {
     if (msg) {
       //  EVENT - If meteor wants to listen for events
       if (typeof msg.eventId !== 'undefined') {
+        if (self.debug) {
+          console.log('------------ REGISTRER EVENT ' + msg.eventId + ' ------------');
+        }
+
         self.addEventListener(msg.eventId);
       }
 
       if (typeof msg.handshake !== 'undefined' && msg.handshake === 'Meteor Rocks!') {
-        console.log('------------ GOT HANDSHAKE!!! ------------');
+        if (self.debug) {
+          console.log('------------ GOT HANDSHAKE!!! ------------');
+        }
         self.handshakeActivated = true;
       }
 
@@ -322,6 +328,9 @@ MeteorCordova = function(meteorUrl, options) {
               typeof msg.command !== 'undefined' &&
               typeof msg.args !== 'undefined') {
 
+        if (self.debug) {
+          console.log('------------ CALL METHOD ' + msg.invokeId + ' ------------');
+        }
         // Guess we got something like window.console.log
         var list = msg.command.split('.');
         if (list && list.length > 0) {

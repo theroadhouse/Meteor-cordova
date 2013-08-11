@@ -38,17 +38,26 @@ Cordova = function(options) {
     'deviceready': true
   };
 
+  if (self.debug) {
+    console.log('Create cordova object');
+  }
 
   // Rig reactive ready var
   self._ready = false;
   self._readyDeps = new Deps.Dependency();
 
   self.isReady = function() {
+    if (self.debug) {
+      console.log('is ready');
+    }
     self._readyDeps.depend();
     return self._ready;
   };
 
   self.setReady = function(value) {
+    if (self.debug) {
+      console.log('set ready ' + value);
+    }
     if (value !== self._ready) {
       self._ready = value;
       self._readyDeps.changed();
@@ -56,6 +65,10 @@ Cordova = function(options) {
   };
 
   self.addEventListener = function(eventId, callback) {
+    if (self.debug) {
+      console.log('addEventListener ' + eventId);
+    }
+
     if (typeof callback !== 'function') {
       throw new Error('ERROR: Cordova.addEventListener expects callback as function');
     }
@@ -84,6 +97,10 @@ Cordova = function(options) {
   // args and callback are both optional if no callback and args a function then
   // no args are assumed and callback isset
   self.call = function(command, args, callback) {
+    if (self.debug) {
+      console.log('Call ' + command);
+    }
+
     // Support that the user skips the arguments and only sets a callback
     if (!callback && typeof args === 'function') {
       callback = args;
@@ -139,8 +156,16 @@ Cordova = function(options) {
         message = { error: 'could not run json on event object' };
       }
 
+      if (self.debug) {
+        console.log('Send message');
+      }
+
       window.parent.postMessage(message, self.url);
     } else {
+      if (self.debug) {
+        console.log('Queue message');
+      }
+
       // Add message to queue until device and meteor both are ready
       self.messageQueue.push(message);
     }

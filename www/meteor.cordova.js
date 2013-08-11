@@ -58,19 +58,24 @@ EJSON.isGlobal = function (vArg) {
   return Object.prototype.toString.call(vArg) === '[object global]';
 };
 
+EJSON.emptyFunction = function() {};
+
 EJSON.clone = function (v /* list of parents */) {
 
   // Check for circular references
   if (typeof arguments !== 'undefined') {
+    if (arguments.length > 2) {
+      return EJSON.emptyFunction;
+    }
     for (var i = 1; i < arguments.length; i++) {
       if (v === arguments[i]) {
-        return function() {}; // If JSON.stringify it'll be left out
+        return EJSON.emptyFunction; //function() {}; // If JSON.stringify it'll be left out
       }
     }
   }
 
   if (EJSON.isGlobal(v)) {
-    return function() {}; // If JSON.stringify it'll be left out
+    return EJSON.emptyFunction; //function() {}; // If JSON.stringify it'll be left out
   }
 
   var ret;
@@ -97,9 +102,17 @@ EJSON.clone = function (v /* list of parents */) {
     ret = [];
     for (var i = 0; i < v.length; i++){
       args[0] = v[i];
-      ret[i] = EJSON.clone.apply(window, args);
+      var value = EJSON.clone.apply(window, args);
+      if (value !== EJSON.emptyFunction) {
+        ret[i] = value;
+      }
     }
-    return ret;
+
+    if (ret.length > 0) {
+      return ret;
+    } else {
+      return EJSON.emptyFunction;
+    }
   }
   // handle general user-defined typed Objects if they have a clone method
   if (typeof v.clone === 'function') {
@@ -110,11 +123,18 @@ EJSON.clone = function (v /* list of parents */) {
   for (var key in v) {
     if (v.hasOwnProperty(key)) {
       args[0] = v[key];
-      ret[key] = EJSON.clone.apply(window, args);
+      var value = EJSON.clone.apply(window, args);
+      if (value !== EJSON.emptyFunction) {
+        ret[key] = value;
+      }
     }
   }
 
-  return ret;
+  if (Object.keys(ret).length > 0) {
+    return ret;
+  } else {
+    return EJSON.emptyFunction;
+  }
 };
 
 MeteorCordova = function(meteorUrl, options) {

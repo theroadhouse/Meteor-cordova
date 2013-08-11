@@ -81,7 +81,15 @@ Cordova = function(options) {
   };
 
   // command 'window.test' args [a, v], callback returns resulting value
+  // args and callback are both optional if no callback and args a function then
+  // no args are assumed and callback isset
   self.call = function(command, args, callback) {
+    // Support that the user skips the arguments and only sets a callback
+    if (!callback && typeof args === 'function') {
+      callback = args;
+      args = [];
+    }
+
     callback = (callback) ? callback : function() {};
 
     if (typeof callback !== 'function') {
@@ -90,6 +98,11 @@ Cordova = function(options) {
 
     var invokeId = self.invokeCounter++;
     var myArgs = [];
+
+
+    // args should allways be an array
+    args = (args && args.length)? args : [];
+
     // We set the returning callback id == 0
     var id = self.addInvokingCallback(invokeId, callback);
 
@@ -114,7 +127,8 @@ Cordova = function(options) {
 
   self.send = function(message) {
     // Check if we are in iframe
-    if (window.self !== window.top && self.handshakeActivated) {
+    if (typeof window !== 'undefined' && window.parent &&
+            self.handshakeActivated) {
      try {
         JSON.stringify(message);
       } catch(err) {
@@ -139,8 +153,10 @@ Cordova = function(options) {
       // Respond to parent do shake back
       self.send({ handshake: msg.handshake });
       // Resume queue FIFO
-      for (var i = 0; i < self.messageQueue.length; i++) {
-        self.send(self.messageQueue[i]);
+      if (typeof self.messageQueue !== 'undefined') {
+        for (var i = 0; i < self.messageQueue.length; i++) {
+          self.send(self.messageQueue[i]);
+        }
       }
       // Empty queue array
       self.messageQueue = [];
@@ -185,7 +201,7 @@ Cordova = function(options) {
 
       // If the returning callback then delete this? - TODO: Should there be any
       // Garbage collection?
-      if (msg.funcId === 0) {
+      if (msg.funcId === 0 && typeof invoked !== 'undefined') {
         if (Object.keys(invoked).length === 1) {
           // The invoked method call only contains returning callback, we
           // Remove the invoke itself since there will be no more calls

@@ -31,63 +31,95 @@ arguments:
 
 if(!Array.isArray) {
   Array.isArray = function (vArg) {
-    return Object.prototype.toString.call(vArg) === "[object Array]";
+    return Object.prototype.toString.call(vArg) === '[object Array]';
   };
 }
 
-/* Adapted from Meteor EJSON */
-_newBinary = function (len) {
-  if (typeof Uint8Array === 'undefined' || typeof ArrayBuffer === 'undefined') {
-    var ret = [];
-    for (var i = 0; i < len; i++) {
-      ret.push(0);
-    }
-    ret.$Uint8ArrayPolyfill = true;
-    return ret;
-  }
-  return new Uint8Array(new ArrayBuffer(len));
-};
 
-_isBinary = function (obj) {
-  return !!((typeof Uint8Array !== 'undefined' && obj instanceof Uint8Array) ||
-    (obj && obj.$Uint8ArrayPolyfill));
-};
+Clone = function (obj) {
+  console.log('clone');
+  var self = this;
 
-_clone = function (v) {
-  console.log('CLONED Object');
-  var ret;
-  if (typeof v !== "object")
-    return v;
-  if (v === null)
-    return null; // null has typeof "object"
-  if (v instanceof Date)
-    return new Date(v.getTime());
-  if (_isBinary(v)) {
-    ret = _newBinary(v.length);
-    for (var i = 0; i < v.length; i++) {
-      ret[i] = v[i];
-    }
-    return ret;
-  }
-  if (Array.isArray(v)) {
-    ret = [];
-    for (i = 0; i < v.length; i++)
-      ret[i] = _clone(v[i]);
-    return ret;
-  }
-  // handle general user-defined typed Objects if they have a clone method
-  if (typeof v.clone === 'function') {
-    return v.clone();
-  }
-  // handle other objects
-  ret = {};
-  for (var key in v) {
-    if (v.hasOwnProperty(key)) {
-      ret[key] = _clone(v[key]);
-    }
-  }
+  self.objects = [];
 
-  return ret;
+  self.isCircular = function(v) {
+    if (typeof self.objects !== 'undefined') {
+      for (var i=0; i < self.objects.length; i++) {
+        if (v === self.objects[i]) {
+          return true;
+        }
+      }
+    }
+    // Not found / possible circular
+    self.objects.push(v);
+
+    return false;
+  };
+
+  self.newBinary = function (len) {
+    if (typeof Uint8Array === 'undefined' || typeof ArrayBuffer === 'undefined') {
+      var ret = [];
+      for (var i = 0; i < len; i++) {
+        ret.push(0);
+      }
+      ret.$Uint8ArrayPolyfill = true;
+      return ret;
+    }
+    return new Uint8Array(new ArrayBuffer(len));
+  };
+
+  self.isBinary = function (obj) {
+    return !!((typeof Uint8Array !== 'undefined' && obj instanceof Uint8Array) ||
+      (obj && obj.$Uint8ArrayPolyfill));
+  };
+
+  self.isGlobal = function (vArg) {
+    return Object.prototype.toString.call(vArg) === '[object global]';
+  };
+
+  self._clone = function (v) {
+    console.log(v);
+    if (self.isCircular(v) || self.isGlobal(v)) {
+      return function() {}; // If JSON.stringify it'll be left out
+    }
+
+    var ret;
+    if (typeof v !== 'object')
+      return v;
+    if (v === null)
+      return null; // null has typeof "object"
+    if (v instanceof Date)
+      return new Date(v.getTime());
+    if (self.isBinary(v)) {
+      ret = self.newBinary(v.length);
+      for (var i = 0; i < v.length; i++) {
+        ret[i] = v[i];
+      }
+      return ret;
+    }
+
+    if (Array.isArray(v)) {
+      ret = [];
+      for (var i = 0; i < v.length; i++)
+        ret[i] = self._clone(v[i]);
+      return ret;
+    }
+    // handle general user-defined typed Objects if they have a clone method
+    if (typeof v.clone === 'function') {
+      return v.clone();
+    }
+    // handle other objects
+    ret = {};
+    for (var key in v) {
+      if (v.hasOwnProperty(key)) {
+        ret[key] = self._clone(v[key]);
+      }
+    }
+
+    return ret;
+  };
+
+  return self._clone(obj);
 };
 
 MeteorCordova = function(meteorUrl, options) {
@@ -273,7 +305,7 @@ MeteorCordova = function(meteorUrl, options) {
 
   self.addEventListener = function(eventId) {
     // Check if any events have been waiting for subscription
-    if (self.eventQueue[eventId]) {
+    if (typeof self.eventQueue[eventId] !== 'undefined') {
       for (var i = 0; i < self.eventQueue[eventId].length; i++) {
         self.send(self.eventQueue[eventId][i]);
       }
@@ -297,7 +329,7 @@ MeteorCordova = function(meteorUrl, options) {
     target.addEventListener(eventId, function(event) {
       // Got an event, let et be triggered
       // make a json proper object out off the event...
-      var clonedEvent = _clone(event);
+      var clonedEvent = new Clone(event);
       self.triggerEvent(eventId, clonedEvent);
     }, false);
   };
@@ -363,19 +395,21 @@ MeteorCordova = function(meteorUrl, options) {
               var myArgs = [];
 
               // We iterate over msg.args array
-              for (var i = 0; i < msg.args.length; i++) {
-                // Get the current argument
-                var arg = msg.args[i];
-                // If argument is a value then push the value to new arguments
-                if (typeof arg.value !== 'undefined') {
-                  myArgs.push(arg.value);
-                }
-                // If argument is a function then push a callback with invokeId
-                // as reference
-                if (typeof arg.funcId !== 'undefined') {
-                  myArgs.push(function(/* arguments */) {
-                    self.sendCallback(msg.invokeId, arg.funcId, arguments);
-                  });
+              if (typeof msg.args !== 'undefined') {
+                for (var i = 0; i < msg.args.length; i++) {
+                  // Get the current argument
+                  var arg = msg.args[i];
+                  // If argument is a value then push the value to new arguments
+                  if (typeof arg.value !== 'undefined') {
+                    myArgs.push(arg.value);
+                  }
+                  // If argument is a function then push a callback with invokeId
+                  // as reference
+                  if (typeof arg.funcId !== 'undefined') {
+                    myArgs.push(function(/* arguments */) {
+                      self.sendCallback(msg.invokeId, arg.funcId, arguments);
+                    });
+                  }
                 }
               }
 

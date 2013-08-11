@@ -13,6 +13,9 @@ Package.on_use(function (api) {
   api.add_files('cordova.client.notify.js', 'client');
 
   api.export && api.export('Cordova', 'client');
+
+  api.export && api.export('Clone', 'client');
+
 });
 
 Package.on_test(function(api) {

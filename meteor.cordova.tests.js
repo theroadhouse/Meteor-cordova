@@ -18,7 +18,7 @@ window.testFunctionCallback = function(name, callback) {
   if (typeof callback === 'function') {
     callback(name);
   } else {
-    throw new Error('testFunctionCallback expected callback as function');
+    //throw new Error('testFunctionCallback expected callback as function');
   }
 
   return 'returning callback';
@@ -60,12 +60,16 @@ var testFrame = {
   },
   triggerEvent: function(eventId, payload) {
     var self = this;
-    for (var i = 0; i < self.eventCallbacks[eventId].length; i++) {
-      try {
-        var callback = self.eventCallbacks[eventId][i];
-        callback.apply(window, [payload]);
-      }catch(err) {
+    if (self.eventCallbacks[eventId]) {
+      for (var i = 0; i < self.eventCallbacks[eventId].length; i++) {
+        try {
+          var callback = self.eventCallbacks[eventId][i];
+          callback.apply(window, [payload]);
+        }catch(err) {
+        }
       }
+    } else {
+      // throw new Error('tried to trigger an event not found, one time event?');
     }
   },
   triggerMessage: function(message) {
@@ -73,7 +77,8 @@ var testFrame = {
       origin: 'http://localhost:3000',
       data: message
     }]);
-  }
+  },
+  onload: function() {}
 };
 
 
@@ -97,6 +102,7 @@ Tinytest.add('MeteorCordova - test suite', function(test) {
   test.isTrue(typeof cordova.testFrame !== false, 'cordova is rigged for iframe no testFrame?');
 });
 
+
 Tinytest.addAsync('MeteorCordova - load test, ', function (test, onComplete) {
   function load() {
     cordova.load(function(error) {
@@ -105,9 +111,16 @@ Tinytest.addAsync('MeteorCordova - load test, ', function (test, onComplete) {
 
       onComplete();
     });
+    
   }
 
   load();
+});
+
+Tinytest.add('MeteorCordova - test handshake', function(test) {
+  testFrame.onload({ event: 'test' });
+  test.isTrue(cordova.handshakeActivated, 'The cordova handshake should be activated');
+  test.isTrue(client.handshakeActivated, 'The client handshake should be activated');
 });
 
 Tinytest.add('MeteorCordova - Events', function(test) {
@@ -149,6 +162,7 @@ Tinytest.add('MeteorCordova - Events', function(test) {
   // Test oneTime event
   testFrame.triggerEvent('deviceready', eventData);
   testFrame.triggerEvent('deviceready', eventData);
+
   test.equal(counterDeviceReady, 1, 'one time events should only be run once');
 });
 
@@ -160,12 +174,38 @@ Tinytest.addAsync('MeteorCordova - call - variable', function (test, onComplete)
   });
 });
 
+Tinytest.addAsync('MeteorCordova - call - variable no args', function (test, onComplete) {
+  // Test variables
+  client.call('window.testValue', function(value) {
+    test.equal(value, 'ok');
+    onComplete();
+  });
+});
+
 Tinytest.addAsync('MeteorCordova - call - method', function (test, onComplete) {
   // Test variables
   client.call('window.testFunction', [], function(value) {
     test.equal(value, 'ok default');
     onComplete();
   });
+});
+
+Tinytest.addAsync('MeteorCordova - call - method no args', function (test, onComplete) {
+  // Test variables
+  client.call('window.testFunction', function(value) {
+    test.equal(value, 'ok default');
+    onComplete();
+  });
+});
+
+Tinytest.addAsync('MeteorCordova - call - method no args no callback', function (test, onComplete) {
+  // Test variables
+  window.testNoCallback = function() {
+    onComplete();
+  };
+
+  // Call the function
+  client.call('window.testNoCallback');
 });
 
 Tinytest.addAsync('MeteorCordova - call - method with param', function (test, onComplete) {
@@ -211,6 +251,54 @@ Tinytest.addAsync('MeteorCordova - call - method with callback param no returnin
     onComplete();
   }]);
 
+});
+
+
+Tinytest.add('MeteorCordova - clone', function(test) {
+  var date = new Date();
+  var a = {
+    bool: false,
+    nr: 10,
+    neg: -10,
+    real: 0.32,
+    str: 'text',
+    obj: {
+      c: 'ok',
+      d: {
+        e: 'okay'
+      }
+    },
+    func: function() { return 'function called'; },
+    date: date,
+    nul: null,
+    undef: undefined
+  };
+  
+  a.global = window;
+
+  a.circular = a;
+
+  var b = {
+    bool: false,
+    nr: 10,
+    neg: -10,
+    real: 0.32,
+    str: 'text',
+    obj: {
+      c: 'ok',
+      d: {
+        e: 'okay'
+      }
+    },
+    //func: 'function called', // Removed
+    date: new Date(date.getTime()),
+    nul: null,
+    undef: undefined
+  };
+
+  var aCloned = new Clone(a);
+
+  test.equal(JSON.stringify(aCloned), JSON.stringify(b), 'clone didnt return as expected');
 });
 //Test API:
 //test.isFalse(v, msg)

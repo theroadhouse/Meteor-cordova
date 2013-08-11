@@ -1,5 +1,5 @@
 Package.describe({
-    summary: "\u001b[32mv0.0.2\n"+
+    summary: "\u001b[32mv0.0.3\n"+
   		   "\u001b[33m-----------------------------------------\n"+
   		   "\u001b[0m Adds basic support for Cordova/Phonegap  \n"+
   		   "\u001b[0m shell communication in iframe            \n"+

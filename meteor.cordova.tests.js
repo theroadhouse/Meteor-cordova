@@ -10,15 +10,13 @@ window.testFunction = function(name) {
   if (name) {
     return 'ok ' + name;
   } else {
-    return 'ok default'
+    return 'ok default';
   }
 };
 
 window.testFunctionCallback = function(name, callback) {
   if (typeof callback === 'function') {
     callback(name);
-  } else {
-    //throw new Error('testFunctionCallback expected callback as function');
   }
 
   return 'returning callback';
@@ -68,8 +66,6 @@ var testFrame = {
         }catch(err) {
         }
       }
-    } else {
-      // throw new Error('tried to trigger an event not found, one time event?');
     }
   },
   triggerMessage: function(message) {
@@ -96,7 +92,9 @@ var cordova = new MeteorCordova('http://localhost:3000', {
 });
 
 // Initialise the client last
-var client = new Cordova();
+var client = new Cordova({
+  debug: true
+});
 
 Tinytest.add('MeteorCordova - test suite', function(test) {
   test.isTrue(typeof cordova.testFrame !== false, 'cordova is rigged for iframe no testFrame?');
@@ -223,7 +221,7 @@ Tinytest.addAsync('MeteorCordova - call - method with callback param', function 
 
   function complete() {
     counter++;
-    if (counter == 2) {
+    if (counter === 2) {
       onComplete();
     }
   }
@@ -236,7 +234,7 @@ Tinytest.addAsync('MeteorCordova - call - method with callback param', function 
   }], function(value) {
     // Test the returning callback
     test.equal(value, 'returning callback');
-    complete();    
+    complete();
   });
 
 });
@@ -256,6 +254,10 @@ Tinytest.addAsync('MeteorCordova - call - method with callback param no returnin
 
 Tinytest.add('MeteorCordova - clone', function(test) {
   var date = new Date();
+  var c = { d: 'test', q: { test: 'test' } };
+  
+  c.circular = c;
+
   var a = {
     bool: false,
     nr: 10,
@@ -271,9 +273,11 @@ Tinytest.add('MeteorCordova - clone', function(test) {
     func: function() { return 'function called'; },
     date: date,
     nul: null,
-    undef: undefined
+    undef: undefined,
+    c1: c,
+    c2: c
   };
-  
+
   a.global = window;
 
   a.circular = a;
@@ -293,10 +297,12 @@ Tinytest.add('MeteorCordova - clone', function(test) {
     //func: 'function called', // Removed
     date: new Date(date.getTime()),
     nul: null,
-    undef: undefined
+    undef: undefined,
+    c1: { d: 'test', q: { test: 'test' } },
+    c2: { d: 'test', q: { test: 'test' } }
   };
 
-  var aCloned = new Clone(a);
+  var aCloned = EJSON.clone(a);
 
   test.equal(JSON.stringify(aCloned), JSON.stringify(b), 'clone didnt return as expected');
 });

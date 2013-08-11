@@ -14,8 +14,6 @@ Package.on_use(function (api) {
 
   api.export && api.export('Cordova', 'client');
 
-  api.export && api.export('Clone', 'client');
-
 });
 
 Package.on_test(function(api) {

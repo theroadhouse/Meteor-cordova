@@ -35,91 +35,86 @@ if(!Array.isArray) {
   };
 }
 
+EJSON = {};
 
-Clone = function (obj) {
-  console.log('clone');
-  var self = this;
-
-  self.objects = [];
-
-  self.isCircular = function(v) {
-    if (typeof self.objects !== 'undefined') {
-      for (var i=0; i < self.objects.length; i++) {
-        if (v === self.objects[i]) {
-          return true;
-        }
-      }
+EJSON.newBinary = function (len) {
+  if (typeof Uint8Array === 'undefined' || typeof ArrayBuffer === 'undefined') {
+    var ret = [];
+    for (var i = 0; i < len; i++) {
+      ret.push(0);
     }
-    // Not found / possible circular
-    self.objects.push(v);
-
-    return false;
-  };
-
-  self.newBinary = function (len) {
-    if (typeof Uint8Array === 'undefined' || typeof ArrayBuffer === 'undefined') {
-      var ret = [];
-      for (var i = 0; i < len; i++) {
-        ret.push(0);
-      }
-      ret.$Uint8ArrayPolyfill = true;
-      return ret;
-    }
-    return new Uint8Array(new ArrayBuffer(len));
-  };
-
-  self.isBinary = function (obj) {
-    return !!((typeof Uint8Array !== 'undefined' && obj instanceof Uint8Array) ||
-      (obj && obj.$Uint8ArrayPolyfill));
-  };
-
-  self.isGlobal = function (vArg) {
-    return Object.prototype.toString.call(vArg) === '[object global]';
-  };
-
-  self._clone = function (v) {
-    console.log(v);
-    if (self.isCircular(v) || self.isGlobal(v)) {
-      return function() {}; // If JSON.stringify it'll be left out
-    }
-
-    var ret;
-    if (typeof v !== 'object')
-      return v;
-    if (v === null)
-      return null; // null has typeof "object"
-    if (v instanceof Date)
-      return new Date(v.getTime());
-    if (self.isBinary(v)) {
-      ret = self.newBinary(v.length);
-      for (var i = 0; i < v.length; i++) {
-        ret[i] = v[i];
-      }
-      return ret;
-    }
-
-    if (Array.isArray(v)) {
-      ret = [];
-      for (var i = 0; i < v.length; i++)
-        ret[i] = self._clone(v[i]);
-      return ret;
-    }
-    // handle general user-defined typed Objects if they have a clone method
-    if (typeof v.clone === 'function') {
-      return v.clone();
-    }
-    // handle other objects
-    ret = {};
-    for (var key in v) {
-      if (v.hasOwnProperty(key)) {
-        ret[key] = self._clone(v[key]);
-      }
-    }
-
+    ret.$Uint8ArrayPolyfill = true;
     return ret;
-  };
+  }
+  return new Uint8Array(new ArrayBuffer(len));
+};
 
-  return self._clone(obj);
+EJSON.isBinary = function (obj) {
+  return !!((typeof Uint8Array !== 'undefined' && obj instanceof Uint8Array) ||
+    (obj && obj.$Uint8ArrayPolyfill));
+};
+
+EJSON.isGlobal = function (vArg) {
+  return Object.prototype.toString.call(vArg) === '[object global]';
+};
+
+EJSON.clone = function (v /* list of parents */) {
+
+  // Check for circular references
+  if (typeof arguments !== 'undefined') {
+    for (var i = 1; i < arguments.length; i++) {
+      if (v === arguments[i]) {
+        return function() {}; // If JSON.stringify it'll be left out
+      }
+    }
+  }
+
+  if (EJSON.isGlobal(v)) {
+    return function() {}; // If JSON.stringify it'll be left out
+  }
+
+  var ret;
+  if (typeof v !== 'object') {
+    return v;
+  }
+  if (v === null) {
+    return null; // null has typeof "object"
+  }
+  if (v instanceof Date) {
+    return new Date(v.getTime());
+  }
+  if (EJSON.isBinary(v)) {
+    ret = EJSON.newBinary(v.length);
+    for (var i = 0; i < v.length; i++) {
+      ret[i] = v[i];
+    }
+    return ret;
+  }
+  var args = Array.prototype.slice.call(arguments);
+  args.unshift(1); // We add prefix an argument
+
+  if (Array.isArray(v)) {
+    ret = [];
+    for (var i = 0; i < v.length; i++){
+      args[0] = v[i];
+      ret[i] = EJSON.clone.apply(window, args);
+    }
+    return ret;
+  }
+  // handle general user-defined typed Objects if they have a clone method
+  if (typeof v.clone === 'function') {
+    return v.clone();
+  }
+  // handle other objects
+  ret = {};
+  for (var key in v) {
+    if (v.hasOwnProperty(key)) {
+      args[0] = v[key];
+      ret[key] = EJSON.clone.apply(window, args);
+    }
+  }
+
+  return ret;
 };
 
 MeteorCordova = function(meteorUrl, options) {
@@ -184,7 +179,7 @@ MeteorCordova = function(meteorUrl, options) {
 
 
   // Test if meteor is online
-  self.load = function(callback, testFrame) {
+  self.load = function(callback) {
     self.init();
 
     var appCacheReady = localStorage.getItem('cachedVersion');
@@ -273,7 +268,9 @@ MeteorCordova = function(meteorUrl, options) {
   };
 
   self.sendHandshake = function() {
-    console.log('------------ SEND HANDSHAKE!!! ------------');
+    if (self.debug) {
+      console.log('------------ SEND HANDSHAKE!!! ------------');
+    }
     // Send a handshake to the client to make sure we are all on the same page
     self.iframe.contentWindow.postMessage({ handshake: 'Meteor Rocks!'}, self.url);
   };
@@ -329,7 +326,7 @@ MeteorCordova = function(meteorUrl, options) {
     target.addEventListener(eventId, function(event) {
       // Got an event, let et be triggered
       // make a json proper object out off the event...
-      var clonedEvent = new Clone(event);
+      var clonedEvent = EJSON.clone(event);
       self.triggerEvent(eventId, clonedEvent);
     }, false);
   };

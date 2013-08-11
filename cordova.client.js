@@ -104,7 +104,7 @@ Cordova = function(options) {
     args = (args && args.length)? args : [];
 
     // We set the returning callback id == 0
-    var id = self.addInvokingCallback(invokeId, callback);
+    self.addInvokingCallback(invokeId, callback);
 
     // We parse the arguments and filter out callback functions
     for (var i = 0; i < args.length; i++) {
@@ -226,7 +226,8 @@ Cordova = function(options) {
       self.connection(event && event.data);
     } else {
       if (self.debug) {
-        console.log('Cordova messageEventHandler failed');
+        console.log('Cordova messageEventHandler failed on origin');
+        console.log(event);
       }
     }
   };
@@ -240,7 +241,9 @@ Cordova = function(options) {
     self.setReady(true);
     // Activate all native plugin API's
     for (var key in Object.keys(self.plugins)) {
-      self.plugins[key] = true;
+      if (self.plugins.hasOwnProperty(key)) {
+        self.plugins[key] = true;
+      }
     }
   });
 

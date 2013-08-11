@@ -86,7 +86,7 @@ Cordova.prototype.prompt = function(message, promptCallback, title, buttonLabels
     throw new Error('Function "prompt" expects a callback function');
 
   if (self.plugins.notification || self.plugins.dialogs) {
-		self.call('navigator.notification.prompt', [message, promptCallback, title, buttonLabels, defaultText]);
+		self.call('navigator.notification.prompt', arguments);
   } else {
 		promptCallback(window.prompt(message, defaultText));
   }
@@ -96,7 +96,7 @@ Cordova.prototype.prompt = function(message, promptCallback, title, buttonLabels
 Cordova.prototype.beep = function(times) {
 	var self = this;
   times = times || 1;
-	if (self.plugins.notification || self.plugins.vibration) {
+	if (self.plugins.notification || self.plugins.dialogs) {
 		self.call('navigator.notification.beep', [times]);
   } else {
 		var beepTimes = function(countDown) {
@@ -116,4 +116,9 @@ Cordova.prototype.vibrate = function(milliseconds) {
   } else {
 		beep(milliseconds, 0);
   }
+};
+
+Cordova.prototype.close = function() {
+  var self = this;
+  self.call('navigator.app.exitApp');
 };

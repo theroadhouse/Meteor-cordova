@@ -13,7 +13,7 @@ Cordova = function(options) {
   // Add plugins and set them deactivated until device is ready
   if (options && typeof options.plugins !== 'undefined') {
     for (var key in Object.keys(options.plugins)) {
-      if (options.plugins[key] == true) {
+      if (options.plugins[key] === true) {
         self.plugins[key] = false;
       }
     }
@@ -22,6 +22,9 @@ Cordova = function(options) {
   self.url = 'file://';
 
   self.handshakeActivated = false;
+
+  // If no handshake we put messages into FIFO queue
+  self.messageQueue = [];
 
   // array of invokeId of callbacks 0 = the returning callback
   self.invokes = {};
@@ -110,7 +113,8 @@ Cordova = function(options) {
   };
 
   self.send = function(message) {
-    if (window.parent) {
+    // Check if we are in iframe
+    if (window.self !== window.top && self.handshakeActivated) {
      try {
         JSON.stringify(message);
       } catch(err) {
@@ -121,10 +125,10 @@ Cordova = function(options) {
         message = { error: 'could not run json on event object' };
       }
 
-      // Check if we are in iframe
-      if (window.self !== window.top && self.handshakeActivated) {
-        window.parent.postMessage(message, self.url);
-      }
+      window.parent.postMessage(message, self.url);
+    } else {
+      // Add message to queue until device and meteor both are ready
+      self.messageQueue.push(message);
     }
   };
 
@@ -132,9 +136,14 @@ Cordova = function(options) {
     if (typeof msg.handshake !== 'undefined') {
       // We got a handshake from the cordova
       self.handshakeActivated = true;
-      window.parent.postMessage({
-        handshake: msg.handshake
-      }, self.url);      
+      // Respond to parent do shake back
+      self.send({ handshake: msg.handshake });
+      // Resume queue FIFO
+      for (var i = 0; i < self.messageQueue.length; i++) {
+        self.send(self.messageQueue[i]);
+      }
+      // Empty queue array
+      self.messageQueue = [];
     }
 
     // We got an event to dispatch

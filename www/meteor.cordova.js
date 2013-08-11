@@ -54,6 +54,7 @@ _isBinary = function (obj) {
 };
 
 _clone = function (v) {
+  console.log('CLONED Object');
   var ret;
   if (typeof v !== "object")
     return v;

@@ -218,28 +218,43 @@ Cordova = function(options) {
       // Get the invoke object
       var invoked = self.invokes[msg.invokeId];
       if (typeof invoked === 'undefined') {
-        throw new Error('ERROR: invoked method id: ' + msg.invokeId + ' not found');
+        return;
       }
 
       // Get the invoked function
       var invokedFunction = invoked[msg.funcId];
-      if (typeof invoked === 'undefined') {
-        throw new Error('ERROR: invoked function id: ' + msg.funcId + ' not found');
+      if (typeof invokedFunction === 'undefined') {
+        return;
       }
-      // All set, we callback the function
-      invokedFunction.apply(window, msg.args);
 
-      // If the returning callback then delete this? - TODO: Should there be any
+      var functionToRemove = 0;
+      var removeInvoked = false;
+      // scope eg. this.remove() and this.removeAll() these will
+      // remove the current callback or all callbacks of this call
+      var removeScope = {
+        remove: function() {
+          functionToRemove = msg.funcId;
+        },
+        removeAll: function() {
+          removeInvoked = true;
+        }
+      };
+
+      // All set, we callback the function
+      invokedFunction.apply(removeScope, msg.args);
+
+      // If the returning callback then delete this?
       // Garbage collection?
-      if (msg.funcId === 0 && typeof invoked !== 'undefined') {
-        if (Object.keys(invoked).length === 1) {
+      if (msg.funcId === functionToRemove || removeInvoked) {
+
+        if (Object.keys(invoked).length === 1 || removeInvoked) {
           // The invoked method call only contains returning callback, we
           // Remove the invoke itself since there will be no more calls
           delete self.invokes[msg.invokeId];
         } else {
           // Even if we delete an item the index is preserved so the callback
           // funcId still points to the right function
-          delete self.invokes[msg.invokeId][0];
+          delete self.invokes[msg.invokeId][msg.funcId];
         }
       }
     } // EO method

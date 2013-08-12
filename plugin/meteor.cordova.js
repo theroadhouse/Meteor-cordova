@@ -315,6 +315,9 @@ MeteorCordova = function(meteorUrl, options) {
   };
 
   self.sendCallback = function(invokeId, funcId, args) {
+    if (self.debug) {
+      console.log('----Send callback ' + invokeId + ' func: ' + funcId);
+    }
     self.send({
       invokeId: invokeId,
       funcId: funcId,
@@ -415,7 +418,7 @@ MeteorCordova = function(meteorUrl, options) {
               // We got a reference to a function so we have to prepare
               // arguments in an array
               var myArgs = [];
-
+              var counter = 0;
               // We iterate over msg.args array
               if (typeof msg.args !== 'undefined') {
                 for (var i = 0; i < msg.args.length; i++) {
@@ -428,9 +431,17 @@ MeteorCordova = function(meteorUrl, options) {
                   // If argument is a function then push a callback with invokeId
                   // as reference
                   if (typeof arg.funcId !== 'undefined') {
-                    myArgs.push(function(/* arguments */) {
-                      self.sendCallback(msg.invokeId, arg.funcId, arguments);
-                    });
+                    // push new argument
+                    myArgs.push(
+                      // Bind values could use _.bind for this too
+                      (function(invokeId, funcId) {
+                        // Return the actual function for the argument
+                        return function(/* arguments */) {
+                          self.sendCallback(invokeId, funcId, arguments);
+                        };
+                      // Run with the values to bind
+                      })(msg.invokeId, arg.funcId)
+                    );
                   }
                 }
               }
@@ -468,8 +479,3 @@ MeteorCordova = function(meteorUrl, options) {
 
   return self;
 };
-
-// Export for Cordova plugin
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = MeteorCordova;
-}

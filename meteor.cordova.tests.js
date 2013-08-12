@@ -170,8 +170,8 @@ Tinytest.addAsync('MeteorCordova - call - variable', function (test, onComplete)
     test.equal(value, 'ok');
     onComplete();
   });
-  window.console.log('Got any messages?');
-  client.call('console.log', ['------TEST CALL CONSOLE LOG ----------']);
+
+  client.call('console.log', ['------ TEST CALL CONSOLE LOG ----------']);
 });
 
 Tinytest.add('MeteorCordova - call - function not found', function(test) {
@@ -263,6 +263,53 @@ Tinytest.addAsync('MeteorCordova - call - method with callback param no returnin
     onComplete();
   }]);
 
+});
+
+
+Tinytest.addAsync('MeteorCordova - call - test this.remove', function (test, onComplete) {
+  var aCalled = 0;
+  var bCalled = 0;
+  var cCalled = 0;
+  var returnCalled = 0;
+
+  window.testFunctionCallback5 = function(callA, callB, callC) {
+    callA();
+    callA(); // this should run
+    callB();
+    callC();
+    return 'returning callback';
+  };
+
+
+  function functionA() {
+    this.remove();
+    aCalled++;
+  }
+
+  function functionB() {
+    bCalled++;
+    this.removeAll();
+  }
+
+  function functionC() {
+    test.fail('This function should never run?');
+    cCalled++;
+  }
+
+  // Test variables
+  client.call('window.testFunctionCallback5', [functionA, functionB, functionC], function(value) {
+    // Test the returning callback
+    test.equal(value, 'returning callback');
+    returnCalled++;
+  });
+
+  Meteor.setTimeout(function() {
+    test.equal(aCalled, 1, 'A should be called once');
+    test.equal(bCalled, 1, 'B should be called once');
+    test.equal(cCalled, 0, 'C should not be called');
+    test.equal(returnCalled, 0, 'Return should not be called');
+    onComplete();
+  }, 100);
 });
 
 

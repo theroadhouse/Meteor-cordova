@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
   xmlns:android="http://schemas.android.com/apk/res/android"
   id="dk.gi2.plugins.MeteorCordova"
-  version="0.0.5">
+  version="0.0.6">
 
   <name>MeteorCordova</name>
 
@@ -22,12 +22,14 @@
 
   <keywords>meteor,cordova,plugin</keywords>
 
-  <js-module src="www/meteor.cordova.js" name="MeteorCordova">
-      <merges target="MeteorCordova" />
-  </js-module>
+  <asset src="plugin/meteor.cordova.js" target="meteor.cordova.js" />
 
-  <asset src="www/fallbackurl.example.html" target="fallbackurl.example.html" />
-  <asset src="www/index.example.html" target="index.example.html" />
+  <!-- <js-module src="plugin/meteor.cordova.js" name="MeteorCordova">
+      <merges target="MeteorCordova" />
+  </js-module> -->
+
+  <asset src="plugin/fallbackurl.example.html" target="fallbackurl.example.html" />
+  <asset src="plugin/index.example.html" target="index.example.html" />
   
   <engines>
     <engine name="cordova" version=">=3.0.0" />

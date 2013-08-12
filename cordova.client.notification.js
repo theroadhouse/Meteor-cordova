@@ -42,11 +42,12 @@ var beep = (function () {
 
         osc.connect(context.destination);
         osc.noteOn(0);
-        setTimeout(function() {
-            osc.noteOff(0);
-            // Callback when beep stops
-            if (typeof callback === 'function')
-				callback();
+        Meteor.setTimeout(function() {
+          osc.noteOff(0);
+          // Callback when beep stops
+          if (typeof callback === 'function') {
+				    callback();
+          }
         }, duration);
     };
 })();

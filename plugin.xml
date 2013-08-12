@@ -23,6 +23,7 @@
   <keywords>meteor,cordova,plugin</keywords>
 
   <asset src="plugin/meteor.cordova.js" target="meteor.cordova.js" />
+  <asset src="plugin/meteor.cordova.css" target="css/meteor.cordova.css" />
 
   <!-- <js-module src="plugin/meteor.cordova.js" name="MeteorCordova">
       <merges target="MeteorCordova" />

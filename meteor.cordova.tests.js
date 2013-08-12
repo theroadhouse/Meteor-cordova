@@ -24,12 +24,12 @@ window.testFunctionCallback = function(name, callback) {
 
 window.parent = {
   postMessage: function(message) {
-    testFrame.triggerMessage(message);
+    testFrame.triggerMessage(JSON.stringify(message));
   },
   triggerMessage: function(message) {
     client.messageEventHandler.apply(client, [{
       origin: 'file://',
-      data: message
+      data: JSON.parse(message)
     }]);
   },
   location: {
@@ -41,7 +41,7 @@ var testFrame = {
   eventCallbacks: {},
   contentWindow: {
     postMessage: function(message) {
-      window.parent.triggerMessage(message);
+      window.parent.triggerMessage(JSON.stringify(message) );
     }
   },
   addEventListener: function(eventId, callback) {
@@ -71,7 +71,7 @@ var testFrame = {
   triggerMessage: function(message) {
     cordova.messageEventHandler.apply(cordova, [{
       origin: 'http://localhost:3000',
-      data: message
+      data: JSON.parse(message)
     }]);
   },
   onload: function() {}
@@ -297,7 +297,7 @@ Tinytest.addAsync('MeteorCordova - call - test this.remove', function (test, onC
   }
 
   // Test variables
-  client.call('window.testFunctionCallback5', [functionA, functionB, functionC], function(value) {
+  client.call('testFunctionCallback5', [functionA, functionB, functionC], function(value) {
     // Test the returning callback
     test.equal(value, 'returning callback');
     returnCalled++;
@@ -310,6 +310,40 @@ Tinytest.addAsync('MeteorCordova - call - test this.remove', function (test, onC
     test.equal(returnCalled, 0, 'Return should not be called');
     onComplete();
   }, 100);
+});
+
+// Test for no returning callbacks....
+Tinytest.addAsync('MeteorCordova - call - method with callback arguments', function (test, onComplete) {
+
+  var funcCordova = 0;
+  var funcClient = 0;
+  var funcReturn = 0;
+
+  window.testFunctionCallback6 = function(callA) {
+    funcCordova++;
+    callA({message: 'you got mail' });
+    return 'hello';
+  };
+
+  var clientCallback = function(message) {
+    test.equal('you got mail', message.message, 'Message is not correct');
+    funcClient++;
+  };
+
+  // Test variables
+  client.call('testFunctionCallback6', [clientCallback], function(value) {
+    // this is a function as parametre
+    test.equal(value, 'hello');
+    funcReturn++;
+  });
+
+  Meteor.setTimeout(function() {
+    test.equal(funcCordova, 1, 'funcCordova should be called once');
+    test.equal(funcClient, 1, 'funcClient should be called once');
+    test.equal(funcReturn, 1, 'funcReturn should be called once');
+    onComplete();
+  }, 100);
+
 });
 
 

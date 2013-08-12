@@ -43,26 +43,16 @@ Cordova = function(options) {
     'deviceready': true
   };
 
-  if (self.debug) {
-    console.log('Create cordova object');
-  }
-
   // Rig reactive ready var
   self._ready = false;
   self._readyDeps = new Deps.Dependency();
 
   self.isReady = function() {
-    if (self.debug) {
-      console.log('is ready');
-    }
     self._readyDeps.depend();
     return self._ready;
   };
 
   self.setReady = function(value) {
-    if (self.debug) {
-      console.log('set ready ' + value);
-    }
     if (value !== self._ready) {
       self._ready = value;
       self._readyDeps.changed();
@@ -70,10 +60,6 @@ Cordova = function(options) {
   };
 
   self.addEventListener = function(eventId, callback) {
-    if (self.debug) {
-      console.log('addEventListener ' + eventId);
-    }
-
     if (typeof callback !== 'function') {
       throw new Error('ERROR: Cordova.addEventListener expects callback as function');
     }
@@ -102,10 +88,6 @@ Cordova = function(options) {
   // args and callback are both optional if no callback and args a function then
   // no args are assumed and callback isset
   self.call = function(command, args, callback) {
-    if (self.debug) {
-      console.log('Call ' + command);
-    }
-
     // Support that the user skips the arguments and only sets a callback
     if (!callback && typeof args === 'function') {
       callback = args;
@@ -154,23 +136,12 @@ Cordova = function(options) {
      try {
         JSON.stringify(message);
       } catch(err) {
-        if (self.debug) {
-          console.log('ERROR: Send message');
-          console.log(message);
-        }
+        throw new Error('Cant send type of message, Error: ' + err);
         message = { error: 'could not run json on event object' };
       }
-
-      if (self.debug) {
-        console.log('Send message');
-      }
-
+      // Send the message directly
       window.parent.postMessage(message, self.url);
     } else {
-      if (self.debug) {
-        console.log('Queue message');
-      }
-
       // Add message to queue until device and meteor both are ready
       self.messageQueue.push(message);
     }
@@ -240,8 +211,23 @@ Cordova = function(options) {
         }
       };
 
+      if (typeof invokedFunction !== 'function') {
+        throw new Error('ERROR: Execute client callback '+msg.invokeId+' funcId: '+msg.funcId + ' not a function');
+        return;
+      }
+
+      // Make sure that we have an array to pass on in the apply
+      var args = [];
+      for (var key in msg.args) {
+        args.push(msg.args[key]);
+      }
+
       // All set, we callback the function
-      invokedFunction.apply(removeScope, msg.args);
+      try {
+        invokedFunction.apply(removeScope, args);
+      } catch(err) {
+        throw new Error('ERROR: Execute client callback '+msg.invokeId+' funcId: '+msg.funcId + ' Error: ' + err);
+      }
 
       // If the returning callback then delete this?
       // Garbage collection?
@@ -259,8 +245,8 @@ Cordova = function(options) {
       }
     } // EO method
 
-    if (msg.error && self.debug) {
-      console.log('CLIENT GOT ERROR BACK: ' + msg.error);
+    if (msg.error) {
+      throw new Error('Client got error back ' + msg.error);
     }
   }; // EO Connection
 
@@ -269,11 +255,6 @@ Cordova = function(options) {
     if (event.origin === self.url) {
       // We have a connection
       self.connection(event && event.data);
-    } else {
-      if (self.debug) {
-        console.log('Cordova messageEventHandler failed on origin');
-        console.log(event);
-      }
     }
   };
 

@@ -179,6 +179,7 @@ MeteorCordova = function(meteorUrl, options) {
       if (self.debug) {
         console.log(onErrorMessage);
       }
+      // throw new Error('Failed to run callback: ' + onErrorMessage + ' Error: ' + err);
     }
   };
 
@@ -279,11 +280,7 @@ MeteorCordova = function(meteorUrl, options) {
       try {
         JSON.stringify(message);
       } catch(err) {
-        if (self.debug) {
-          console.log('ERROR: Send message');
-          console.log(message);
-        }
-        message = { error: 'could not run json on event object' };
+        message = { error: 'could not run json on message object' };
       }
       self.iframe.contentWindow.postMessage(message, self.url);
     }
@@ -437,7 +434,13 @@ MeteorCordova = function(meteorUrl, options) {
                       (function(invokeId, funcId) {
                         // Return the actual function for the argument
                         return function(/* arguments */) {
-                          self.sendCallback(invokeId, funcId, arguments);
+                          // Convert to an array to be consistent
+                          var args = [];
+                          for (var i = 0; i < arguments.length; i++) {
+                            args.push(arguments[i]);
+                          }
+
+                          self.sendCallback(invokeId, funcId, args);
                         };
                       // Run with the values to bind
                       })(msg.invokeId, arg.funcId)
@@ -467,10 +470,6 @@ MeteorCordova = function(meteorUrl, options) {
     if (event.origin === self.url) {
       // We have a connection
       self.connection(event && event.data);
-    } else {
-      if (self.debug) {
-        console.log('MeteorCordova messageEventHandler failed');
-      }
     }
   };
 

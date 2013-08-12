@@ -87,9 +87,13 @@ Cordova.prototype.prompt = function(message, promptCallback, title, buttonLabels
     throw new Error('Function "prompt" expects a callback function');
 
   if (self.plugins.notification || self.plugins.dialogs) {
-		self.call('navigator.notification.prompt', arguments);
+		self.call('navigator.notification.prompt', [message, promptCallback, title, buttonLabels, defaultText]);
   } else {
-		promptCallback(window.prompt(message, defaultText));
+    var result = window.prompt(message, defaultText);
+		promptCallback({
+      input1: result,
+      buttonIndex: (result === null || result === '')? 2 : 1
+    });
   }
 
 };

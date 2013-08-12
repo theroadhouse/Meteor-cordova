@@ -295,6 +295,9 @@ MeteorCordova = function(meteorUrl, options) {
   };
 
   self.triggerEvent = function(eventId, payload) {
+    if (self.debug) {
+      console.log('Event triggered: ' + eventId);
+    }
     if (self.activeEventListener[eventId]) {
       self.send({
         eventId: eventId,

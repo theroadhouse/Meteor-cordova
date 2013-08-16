@@ -62,7 +62,7 @@ EJSON.emptyFunction = function() {};
 
 EJSON.clone = function (v /* list of parents */) {
   // How deep should we go
-  var maxLevel = 4;
+  var maxLevel = 2;
 
   // Check for circular references
   if (typeof arguments !== 'undefined') {
@@ -139,7 +139,7 @@ EJSON.clone = function (v /* list of parents */) {
   }
 };
 
-MeteorCordova = function(meteorUrl, options) {
+MeteorCordova = function(iframeId, options) {
   // Rig vars
   var self = this;
   // Send queue until client is ready
@@ -152,128 +152,29 @@ MeteorCordova = function(meteorUrl, options) {
   self.testFrame = (options && options.testFrame)?options.testFrame:false;
 
   // Rig Options
-  self.version = (options && options.version)?options.version: '';
-  self.appcache = !!(options && options.appcache && options.appcache === true);
-  self.url = meteorUrl.replace(/\/+$/, "");
-  self.onload = (options && options.onload)?options.onload: function() {};
+  self.iframeId = iframeId;
   self.debug = !!(options && options.debug && options.debug === true);
-  self.fallbackUrl = (options && options.fallbackUrl)?options.fallbackUrl: '';
 
-  // Error handler
-  self.onError = function() {
-    // If the user have set a fallbackUrl we load that instead
-    if (self.fallbackUrl) {
-      self.loadUrl(self.fallbackUrl, true);
-    }
-  };
+  // Testing purpose
+  if (self.testFrame !== false) {
+    self.iframe = self.testFrame;
+  } else {
+    // Try to fetch the element
+    self.iframe = document.getElementById(self.iframeId);
 
-  self.runCallback = function(callback, onErrorMessage, args) {
-    if (typeof callback !== 'function') {
-      throw new Error('Error: Callback is not a function - ' + onErrorMessage);
-    }
-    // Make callback
-    try {
-      // we use appcache call amybody back
-      callback.apply(window, args);
-    } catch(err) {
-      if (self.debug) {
-        console.log(onErrorMessage);
-      }
-      // throw new Error('Failed to run callback: ' + onErrorMessage + ' Error: ' + err);
-    }
-  };
+    self.url = self.iframe.src.replace(/\/+$/, '');
 
-  self.init = function() {
-    // Testing purpose
-    if (self.testFrame !== false) {
-      self.iframe = self.testFrame;
-    } else {
-      // Add the iframe element to DOM - We let the user to decide the css
-      if (!self.iframe && document && document.body) {
-        self.iframe = document.createElement('iframe');
-        document.body.appendChild(self.iframe);
-        // If on error is supported then we use it for catching an fallback
-        self.iframe.onerror = self.onError;
-      } else {
-        throw new Error('Could not create and insert iframe element');
-      }
-    }
-  };
-
-
-  // Test if meteor is online
-  self.load = function(callback) {
-    self.init();
-
-    var appCacheReady = localStorage.getItem('cachedVersion');
-    var forceCheck = localStorage.getItem('forceCheck');
-    // Check if its a callback
-    callback = (typeof callback === 'function')?callback: function() {};
-    // If an previous onload event allready has set the cachedVersion then we
-    // rely on the appcache otherwice we do check for availabillity
-    if (!appCacheReady || forceCheck) {
-      var httpRequest = new XMLHttpRequest();
-      httpRequest.onreadystatechange = function() {
-        if (httpRequest.readyState === 4) {
-          if (httpRequest.status === 200) {
-            // We got an status 200 so we proceed
-            self.runCallback(callback, 'ERROR: load callback on success');
-            // Try to load meteor
-            self.loadMeteor();
-          } else {
-            // Ups, we callback with an error
-            callback(httpRequest.status);
-          }
-        }
+    if (self.iframe) {
+      self.iframe.onload = function() {
+        self.iframe.style.display = 'block';
+        self.sendHandshake();
       };
-      httpRequest.open('GET', self.url);
-      httpRequest.send();
     } else {
-      // Call on error
-      self.onError();
-      // Call users callback
-      self.runCallback(callback, 'ERROR: load callback on failure');
+      throw new Error('Could not find iFrame: ' + self.iframeId);
     }
-  }; // EO load
-
-
-  // We allow for loading any urls
-  self.loadUrl = function(url, callbackUrlFlag) {
-    self.iframe.onload = function(e) {
-      self.runCallback(self.onload, 'ERROR: onload callback failed', [e, callbackUrlFlag]);
-    };
-    self.iframe.src = url;
-  };
-
-
-  // onload start listening to messages
-  self.isLoaded = function(e) {
-    // Ok, we made it... dont force a check on next load
-    localStorage.setItem('forceCheck', false);
-
-    // If we use appcache then set this
-    if (self.appcache) {
-      localStorage.setItem('cachedVersion', true);
-    }
-
-    self.sendHandshake();
-
-    self.runCallback(self.onload, 'ERROR: onload callback failed', [e, false]);
-  };
-
-
-  // When online then add iframe to dom and load meteor
-  self.loadMeteor = function() {
-    // Set force check - if load failes then appcache might not be loaded?
-    localStorage.setItem('forceCheck', true);
-    self.iframe.onload = function(e) {
-      self.isLoaded(e);
-    };
-    self.iframe.src = self.url;
-  };
+  }
 
   // We registrer the onload event - otherwise we just fail, can we catch error?
-
 
   self.send = function(message) {
     if (self.iframe && self.iframe.contentWindow && self.handshakeActivated) {
@@ -362,6 +263,7 @@ MeteorCordova = function(meteorUrl, options) {
   self.connection = function(msg) {
     // We rig a connection for the iframe.
     if (msg) {
+
       //  EVENT - If meteor wants to listen for events
       if (typeof msg.eventId !== 'undefined') {
         if (self.debug) {
@@ -474,7 +376,7 @@ MeteorCordova = function(meteorUrl, options) {
       // We have a connection
       self.connection(event && event.data);
     } else {
-      throw new Error('Origins should match: ' + event.origin + ' === ' + self.url);
+      throw new Error('Origins should match: ' + event.origin + ' === ' + self.url);      
     }
   };
 

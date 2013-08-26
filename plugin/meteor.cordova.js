@@ -249,12 +249,14 @@ MeteorCordova = function(iframeId, options) {
     }
 
     // Add the event listener
-    target.addEventListener(eventId, function(event) {
-      // Got an event, let et be triggered
-      // make a json proper object out off the event...
-      var clonedEvent = EJSON.clone(event);
-      self.triggerEvent(eventId, clonedEvent);
-    }, false);
+    if (typeof target.addEventListener !== 'undefined') {
+      target.addEventListener(eventId, function(event) {
+        // Got an event, let et be triggered
+        // make a json proper object out off the event...
+        var clonedEvent = EJSON.clone(event);
+        self.triggerEvent(eventId, clonedEvent);
+      }, false);
+    }
   };
 
 
@@ -381,7 +383,9 @@ MeteorCordova = function(iframeId, options) {
   };
 
   // Start listening for messages
-  window.addEventListener('message', self.messageEventHandler, false);
+  if (typeof window.addEventListener !== 'undefined') {
+    window.addEventListener('message', self.messageEventHandler, false);
+  }
 
   return self;
 };

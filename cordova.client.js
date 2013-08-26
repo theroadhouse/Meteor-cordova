@@ -259,7 +259,9 @@ Cordova = function(options) {
   };
 
   // Start listening for messages
-  window.addEventListener('message', self.messageEventHandler, false);
+  if (typeof window.addEventListener !== 'undefined') {
+    window.addEventListener('message', self.messageEventHandler, false);
+  }
 
   // Listen for deviceready event
   self.addEventListener('deviceready', function() {

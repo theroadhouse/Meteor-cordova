@@ -1,10 +1,10 @@
 {
-  "name": "Cordova",
+  "name": "cordova",
   "description": "Meteor basic support for Cordova/Phonegap",
-  "homepage": "https://github.com/raix/Meteor-Cordova",
+  "homepage": "https://github.com/raix/Meteor-cordova",
   "author": "Morten Henriksen  (http://gi-software.com)",
-  "version": "0.0.6",
-  "git": "https://github.com/raix/Meteor-Cordova.git",
+  "version": "0.0.7",
+  "git": "https://github.com/raix/Meteor-cordova.git",
   "packages": {
   }
 }

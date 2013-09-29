@@ -100,7 +100,7 @@ Tinytest.add('MeteorCordova - test suite', function(test) {
   test.isTrue(typeof cordova.testFrame !== false, 'cordova is rigged for iframe no testFrame?');
 });
 
-
+/*
 Tinytest.addAsync('MeteorCordova - load test, ', function (test, onComplete) {
   function load() {
     cordova.load(function(error) {
@@ -400,7 +400,7 @@ Tinytest.add('MeteorCordova - clone', function(test) {
   var aCloned = EJSON.clone(a);
 
   test.equal(JSON.stringify(aCloned), JSON.stringify(b), 'clone didnt return as expected');
-});
+});*/
 //Test API:
 //test.isFalse(v, msg)
 //test.isTrue(v, msg)

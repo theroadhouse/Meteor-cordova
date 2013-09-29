@@ -1,5 +1,6 @@
-Cordova
+Cordova [![Build Status](https://travis-ci.org/raix/Meteor-cordova.png?branch=master)](https://travis-ci.org/raix/Meteor-cordova) [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=VWTXHTA8GZMNG)
 =======
+
 Simple common api for coding with Cordova / Phonegap. The functions fallback if Cordova is not loaded, degrading to browser functionality.
 
 This package consists of multiple features:

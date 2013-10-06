@@ -6,7 +6,7 @@ Simple common api for coding with Cordova / Phonegap. The functions fallback if 
 This package consists of multiple features:
 * Running Meteor in Cordova on a device
 * Allow appcache to work
-* Fallback url if meteor cant load - when using appcache this would be the case until appcache is initialized
+* ~~Fallback url if meteor cant load - when using appcache this would be the case until appcache is initialized~~ *(working on a fallback model on the runtime branch)*
 * Allowing Meteor to interact with Cordova and plugins
 
 #Getting started
@@ -20,34 +20,24 @@ mrt add cordova
 ```
 
 Add some boilerplate checkout `www/index.example.html` inspiration. When the device is ready MeteorCordova can be used, the plugin is loaded by Cordova so no need for script tags.
+```html
+<body>
+  <iframe id="meteor" src="http://www.meteor.com"></iframe>
+
+  <script type="text/javascript">
+  
+    shellVersion = '0.1.4';
+
+    meteor = new MeteorCordova('meteor');
+
+    // meteor.initPush({ senderID: 'xGoogleKeyx' });
+
+  </script>
+
+
+</body>
 ```
-    document.addEventListener('deviceready', function() {
-
-      meteor = new MeteorCordova('http://localhost:3000', {
-        appcache: false, // Set this true if Meteor got appcache
-        fallbackUrl: 'fallbackurl.example.html',
-        debug: true       // Set to false in production
-
-      });
-
-      // Begin the load process
-      meteor.load(function(error) {
-        if (error) {
-          alert('error: ' + error);
-        }
-      });
-      
-    });
-```
-
-##Options
-```js
-  options = {
-    appcache:true, // should we rely on appcache
-    onload: function(e, callbackUrlFlag) {} // callback for when the iframe is loaded with meteor or fallbackUrl (if callbackUrlFlag == true)
-    fallbackUrl: '' // if load check fails then this url is called
-  }
-```
+*Have a look at the plugin/index.html file for more a basic boilerplate*
 
 #The Meteor client API
 ##Init

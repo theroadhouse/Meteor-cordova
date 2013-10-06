@@ -12,7 +12,7 @@ This package consists of multiple features:
 #Getting started
 1. Use the cordova CLI to install the plugin in the project
 ```bash
-$ cordova plugin add https://github.com/raix/Meteor-Cordova.git
+$ cordova plugin add https://github.com/raix/Meteor-cordova.git
 ```
 2. Use meteorite to add the package to the meteor app
 ```bash

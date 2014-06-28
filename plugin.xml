@@ -11,9 +11,9 @@
   </description>
 
   <info>
-    Remeber to checkout the documentation on https://github.com/raix/Meteor-Cordova
+    Remember to checkout the documentation on https://github.com/raix/Meteor-Cordova
 
-    You have to initialize the MeteorCordava, reference the added html files example.html and fallback.html
+    You have to initialize the MeteorCordova, reference the added html files example.html and fallback.html
   </info>
 
   <author>Morten Henriksen aka RaiX</author>
